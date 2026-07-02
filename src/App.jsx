@@ -228,7 +228,7 @@ export default function App() {
   useEffect(() => {
     if (!isLogged || userList.length === 0) return;
     const emailLower = sessionEmail.toLowerCase().trim();
-    if (emailLower === 'cristopher') {
+    if (emailLower === 'cristofer10murillo@hotmail.com') {
       setIsAdmin(true); setAccessDenied(false);
     } else {
       const me = userList.find(u => String(u.email || '').toLowerCase().trim() === emailLower);
@@ -418,9 +418,9 @@ export default function App() {
     const pwd = loginPassword.trim();
     if (!email || !pwd) return setLoginError('Ingrese correo y contraseña');
 
-    if (email === 'cristopher') {
-      if (pwd === 'Britt2026') { 
-        await saveToCloud('users_access', { id: 'cristopher', email, status: 'authorized' });
+    if (email === 'cristofer10murillo@hotmail.com') {
+      if (pwd === 'Shariton24') { 
+        await saveToCloud('users_access', { id: 'cristofer10murillo@hotmail.com', email, status: 'authorized' });
         loginSuccess(email, pwd);
       } else { setLoginError('Contraseña incorrecta'); }
     } else {
@@ -438,7 +438,7 @@ export default function App() {
     const pwd = loginPassword.trim();
     
     if (!email || !pwd) return setLoginError('Ingrese correo y contraseña');
-    if (email === 'cristopher') return setLoginError('ID reservado. Inicia sesión.');
+    if (email === 'cristofer10murillo@hotmail.com') return setLoginError('ID reservado. Inicia sesión.');
 
     const userExists = userList.find(u => String(u.email || '').toLowerCase().trim() === email);
     if (userExists) return setLoginError('Este correo ya está registrado. Inicia sesión.');
@@ -687,7 +687,7 @@ export default function App() {
               <input type="text" value={sessionEmail || ''} onChange={e => { setSessionEmail(e.target.value); setLoginError(''); }} className="w-full p-4 bg-[#131627] border border-[#2d324f] rounded-xl text-sm font-medium text-white outline-none focus:bg-[#181c30] focus:ring-1 focus:ring-[#5B50FF] focus:border-[#5B50FF] transition-all" placeholder="Usuario o Correo" />
             </div>
             <div className="animate-in slide-in-from-top-3">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{sessionEmail.toLowerCase().trim() === 'cristopher' ? 'Master Key' : 'Contraseña'}</label>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{sessionEmail.toLowerCase().trim() === 'cristofer10murillo@hotmail.com' ? 'Master Key' : 'Contraseña'}</label>
               <input type="password" value={loginPassword || ''} onChange={e => { setLoginPassword(e.target.value); setLoginError(''); }} className="w-full p-4 bg-[#131627] border border-[#2d324f] rounded-xl text-sm font-medium text-white outline-none focus:bg-[#181c30] focus:ring-1 focus:ring-[#5B50FF] focus:border-[#5B50FF] transition-all" placeholder="••••••••" />
             </div>
             {loginError && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold py-3 rounded-xl text-center animate-in fade-in">{loginError}</div>}
@@ -1483,7 +1483,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2d324f]">
-                    {userList.filter(u => u.email !== 'cristopher').map(u => (
+                    {userList.filter(u => u.email !== 'cristofer10murillo@hotmail.com').map(u => (
                       <tr key={u.id} className="hover:bg-white/5 transition-colors">
                         <td className="py-4 px-6 font-medium text-slate-200">{u.email}</td>
                         <td className="py-4 px-6 text-center">
@@ -1515,7 +1515,7 @@ export default function App() {
                         </td>
                       </tr>
                     ))}
-                    {userList.filter(u => u.email !== 'cristopher').length === 0 && (<tr><td colSpan="4" className="py-10 text-center text-slate-500 text-sm">No hay usuarios registrados.</td></tr>)}
+                    {userList.filter(u => u.email !== 'cristofer10murillo@hotmail.com').length === 0 && (<tr><td colSpan="4" className="py-10 text-center text-slate-500 text-sm">No hay usuarios registrados.</td></tr>)}
                   </tbody>
                 </table>
               </div>
