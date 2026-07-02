@@ -101,7 +101,15 @@ export default function App() {
     if (!authUser) return;
     const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', authUser.uid);
     
+    
+    const timeoutId = setTimeout(() => {
+      setLoadingError('No se pudo conectar a la base de datos de Firestore. Asegúrate de haber entrado a la consola de Firebase, ir a Firestore Database y hacer clic en "Crear base de datos".');
+      setAuthLoading(false);
+    }, 8000);
+
     const unsubUser = onSnapshot(userDocRef, (docSnap) => {
+      clearTimeout(timeoutId);
+
       const isMasterAdmin = authUser.email === 'cristofer10murillo@gmail.com';
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -132,6 +140,7 @@ export default function App() {
       setLoadingError(null); 
     }, (error) => {
       console.error("Error cargando perfil de usuario:", error);
+      clearTimeout(timeoutId);
       setLoadingError(`No se pudo leer tu perfil. Detalles: ${error.message}`);
       setAuthLoading(false);
     });
