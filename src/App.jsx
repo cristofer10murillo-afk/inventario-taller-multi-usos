@@ -144,7 +144,12 @@ export default function App() {
       setLoadingError(`No se pudo leer tu perfil. Detalles: ${error.message}`);
       setAuthLoading(false);
     });
-    return () => unsubUser();
+    
+    return () => {
+      clearTimeout(timeoutId);
+      unsubUser();
+    };
+
   }, [authUser]);
 
   useEffect(() => {
