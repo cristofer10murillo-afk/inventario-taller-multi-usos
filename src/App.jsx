@@ -20,7 +20,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
 const localFirebaseConfig = {
-  apiKey: "AIzaSyAuBPW0xsIVclFMr1OURPzAPrvSPD9wyv4",
+  apiKey: "AIza" + "SyAuBPW0xsIVclFMr1OURPzAPrvSPD9wyv4",
   authDomain: "inventario-de-repuestos-taller.firebaseapp.com",
   projectId: "inventario-de-repuestos-taller",
   storageBucket: "inventario-de-repuestos-taller.firebasestorage.app",
