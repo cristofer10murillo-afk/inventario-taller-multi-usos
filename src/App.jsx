@@ -105,7 +105,7 @@ export default function App() {
     const timeoutId = setTimeout(() => {
       setLoadingError('No se pudo conectar a la base de datos de Firestore. Asegúrate de haber entrado a la consola de Firebase, ir a Firestore Database y hacer clic en "Crear base de datos".');
       setAuthLoading(false);
-    }, 8000);
+    }, 15000);
 
     const unsubUser = onSnapshot(userDocRef, (docSnap) => {
       clearTimeout(timeoutId);
