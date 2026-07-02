@@ -103,8 +103,8 @@ export default function App() {
     
     
     const timeoutId = setTimeout(() => {
-      setLoadingError('No se pudo conectar a la base de datos de Firestore. Asegúrate de haber entrado a la consola de Firebase, ir a Firestore Database y hacer clic en "Crear base de datos".');
-      setAuthLoading(false);
+      console.warn('Conexión lenta a Firestore. Es posible que un antivirus o red corporativa esté bloqueando WebSockets, forzando la caída a Long Polling (puede tardar hasta 30s).');
+      // No cortamos la conexión ni mostramos error destructivo. Solo avisamos.
     }, 15000);
 
     const unsubUser = onSnapshot(userDocRef, (docSnap) => {
