@@ -101,17 +101,18 @@ export default function App() {
     if (!authUser) return;
     const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', authUser.uid);
     
-    
     const timeoutId = setTimeout(() => {
       console.warn('Conexión lenta a Firestore. Es posible que un antivirus o red corporativa esté bloqueando WebSockets, forzando la caída a Long Polling (puede tardar hasta 30s).');
-      // No cortamos la conexión ni mostramos error destructivo. Solo avisamos.
     }, 15000);
+
+    let profileLoaded = false;
 
     const unsubUser = onSnapshot(userDocRef, (docSnap) => {
       clearTimeout(timeoutId);
 
       const isMasterAdmin = authUser.email === 'cristofer10murillo@gmail.com';
       if (docSnap.exists()) {
+        profileLoaded = true;
         const data = docSnap.data();
         let realName = data.name;
         if (isMasterAdmin && (!realName || realName.toLowerCase() === 'usuario' || realName === '')) {
@@ -129,6 +130,13 @@ export default function App() {
             role: userRole
         });
       } else {
+        if (profileLoaded) {
+           alert("Tu perfil ha sido eliminado por el administrador. La sesión se cerrará.");
+           signOut(auth);
+           setMasterOverride(false);
+           return;
+        }
+        profileLoaded = true;
         const adminName = isMasterAdmin ? 'Cristofer Lizano' : (authUser.email || 'Anónimo');
         const initialStatus = (isMasterAdmin || isPreviewEnv) ? 'approved' : 'pending';
         const initialRole = (isMasterAdmin || isPreviewEnv) ? 'master' : 'basic';
