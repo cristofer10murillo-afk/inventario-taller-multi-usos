@@ -681,7 +681,7 @@ export default function App() {
   if (authLoading) return (
     <div className="min-h-screen bg-[#0f1423] flex flex-col items-center justify-center space-y-6">
       <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-500"></div>
-      <p className="text-indigo-400 font-medium tracking-wide animate-pulse">Conectando a Nexus Pro...</p>
+      <p className="text-indigo-400 font-medium tracking-wide animate-pulse">Conectando a International Nexus Pro...</p>
     </div>
   );
 
@@ -725,7 +725,7 @@ export default function App() {
         <div className="flex items-center space-x-3 mb-10">
           <div className="p-2 bg-indigo-600 rounded-lg shadow-[0_0_15px_rgba(79,70,229,0.4)] shrink-0"><Package size={24} className="text-white" /></div>
           <h1 className="text-lg font-bold tracking-tight leading-tight text-white">
-            Nexus Pro <br/>
+            International Nexus Pro <br/>
             <span className="text-indigo-400 text-xs font-semibold uppercase tracking-wider">by Cristofer Lizano</span>
           </h1>
         </div>
@@ -3368,7 +3368,7 @@ function AuthScreen({ onAdminDirectLogin, auth }) {
     <div className="min-h-screen bg-[#0f1423] bg-gradient-to-br from-[#0f1423] via-[#1a1c3a] to-[#0f1423] flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-[#1e253c]/60 backdrop-blur-2xl p-8 rounded-[2rem] shadow-2xl border border-white/10">
         <div className="flex justify-center mb-6"><div className="text-indigo-400"><ShieldCheck size={56} strokeWidth={1.5} /></div></div>
-        <h2 className="text-2xl font-bold text-center text-white">{isLogin ? 'Nexus Pro' : 'Nexus Pro - Registro'}</h2>
+        <h2 className="text-2xl font-bold text-center text-white">{isLogin ? 'International Nexus Pro' : 'International Nexus Pro - Registro'}</h2>
         <p className="text-center text-slate-400 text-xs tracking-widest uppercase mb-8 mt-2 font-semibold">Control Operations</p>
         
         {error && <div className="mb-6 p-3 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-sm rounded-xl flex items-center space-x-2"><AlertCircle size={18} className="shrink-0"/><span>{error}</span></div>}

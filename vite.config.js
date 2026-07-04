@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'logo.svg'],
       manifest: {
-        name: 'Nexus Pro',
-        short_name: 'Nexus Pro',
+        name: 'International Nexus Pro',
+        short_name: 'International Nexus Pro',
         description: 'Gestor de Inventario y Bodega',
         theme_color: '#0f1423',
         background_color: '#0f1423',
