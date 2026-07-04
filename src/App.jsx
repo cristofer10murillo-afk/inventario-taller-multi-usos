@@ -102,7 +102,7 @@ export default function App() {
 
   useEffect(() => {
     if (!authUser) return;
-    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', authUser.uid);
+    const userDocRef = doc(db, 'users', authUser.uid);
     
     
     const timeoutId = setTimeout(() => {
@@ -158,32 +158,32 @@ export default function App() {
   useEffect(() => {
     if (!authUser || (userData?.status !== 'approved' && !masterOverride)) return;
     
-    const materialsRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+    const materialsRef = collection(db, 'materials');
     const unsubMaterials = onSnapshot(materialsRef, (snapshot) => {
       setMaterials(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Materials:", error));
 
-    const transactionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
+    const transactionsRef = collection(db, 'transactions');
     const unsubTransactions = onSnapshot(transactionsRef, (snapshot) => {
       setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Transactions:", error));
 
-    const requestsRef = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
+    const requestsRef = collection(db, 'requests');
     const unsubRequests = onSnapshot(requestsRef, (snapshot) => {
       setRequests(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Requests:", error));
 
-    const bodegasRef = collection(db, 'artifacts', appId, 'public', 'data', 'bodegas');
+    const bodegasRef = collection(db, 'bodegas');
     const unsubBodegas = onSnapshot(bodegasRef, (snapshot) => {
       setBodegas(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Bodegas:", error));
 
-    const costCentersRef = collection(db, 'artifacts', appId, 'public', 'data', 'costCenters');
+    const costCentersRef = collection(db, 'costCenters');
     const unsubCostCenters = onSnapshot(costCentersRef, (snapshot) => {
       setCostCenters(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error CostCenters:", error));
 
-    const suppliersRef = collection(db, 'artifacts', appId, 'public', 'data', 'suppliers');
+    const suppliersRef = collection(db, 'suppliers');
     const unsubSuppliers = onSnapshot(suppliersRef, (snapshot) => {
       setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Suppliers:", error));
@@ -193,7 +193,7 @@ export default function App() {
 
   useEffect(() => {
     if (!authUser || userData?.role !== 'master') return;
-    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+    const usersRef = collection(db, 'users');
     const unsub = onSnapshot(usersRef, snap => {
       setAllUsers(snap.docs.map(doc => ({id: doc.id, ...doc.data()})));
     }, (error) => console.error("Error Users:", error));
@@ -491,7 +491,7 @@ export default function App() {
     const { imageFile, ...newMaterial } = data;
     let imageUrl = null;
     if (imageFile) imageUrl = await uploadImage(imageFile);
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), { 
+    await addDoc(collection(db, 'materials'), { 
       ...newMaterial, 
       imageUrl, 
       createdBy: userData?.name || 'Usuario Admin', 
@@ -504,12 +504,12 @@ export default function App() {
     const { id, imageFile, ...updatedData } = data;
     let newImageUrl = updatedData.imageUrl; 
     if (imageFile) newImageUrl = await uploadImage(imageFile);
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', id), { ...updatedData, imageUrl: newImageUrl });
+    await updateDoc(doc(db, 'materials', id), { ...updatedData, imageUrl: newImageUrl });
     closeModal();
   };
 
   const handleDeleteMaterial = async (materialId) => {
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId));
+    await deleteDoc(doc(db, 'materials', materialId));
     closeModal();
   };
 
@@ -520,17 +520,17 @@ export default function App() {
     if (type === 'USE_BODEGA' || type === 'RETURN_BODEGA') {
         if (type === 'RETURN_BODEGA') {
             const newStock = material.stock + quantity;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId), { stock: newStock });
+            await updateDoc(doc(db, 'materials', materialId), { stock: newStock });
         }
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), { 
+        await addDoc(collection(db, 'transactions'), { 
           materialId, type, quantity, date: new Date().toISOString(), user: txUser,
           bodegaOrigen: bodegaOrigen,
           registeredBy: userData?.name || authUser?.email || 'Sistema/Admin'
         });
     } else {
         const newStock = type === 'IN' ? material.stock + quantity : material.stock - quantity;
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId), { stock: newStock });
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), { 
+        await updateDoc(doc(db, 'materials', materialId), { stock: newStock });
+        await addDoc(collection(db, 'transactions'), { 
           materialId, type, quantity, date: new Date().toISOString(), user: txUser,
           bodegaDestino: 'ninguna',
           registeredBy: userData?.name || authUser?.email || 'Sistema/Admin'
@@ -546,8 +546,8 @@ export default function App() {
          throw new Error(`Stock insuficiente para ${item.name}`);
       }
       const newStock = material.stock - item.quantity;
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'materials', material.id), { stock: newStock });
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), { 
+      await updateDoc(doc(db, 'materials', material.id), { stock: newStock });
+      await addDoc(collection(db, 'transactions'), { 
         materialId: material.id, 
         type: 'OUT', 
         quantity: item.quantity, 
@@ -570,7 +570,7 @@ export default function App() {
       fileName = requestFile.name;
     }
 
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'requests'), { 
+    await addDoc(collection(db, 'requests'), { 
       ...dataToSave, 
       fileUrl,
       fileName,
@@ -582,7 +582,7 @@ export default function App() {
   };
 
   const handleCompleteRequest = async (requestId) => {
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', requestId), { 
+    await updateDoc(doc(db, 'requests', requestId), { 
       status: 'completed', 
       receivedDate: new Date().toISOString() 
     });
@@ -590,7 +590,7 @@ export default function App() {
   };
 
   const handleDeleteRequest = async (requestId) => {
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', requestId));
+    await deleteDoc(doc(db, 'requests', requestId));
     closeModal();
   };
 
@@ -605,14 +605,14 @@ export default function App() {
   };
 
   const handleCreateBodega = async (bodegaData) => {
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bodegas'), {
+    await addDoc(collection(db, 'bodegas'), {
       ...bodegaData,
       createdAt: new Date().toISOString()
     });
   };
 
   const handleUpdateBodega = async ({ id, name, owner }) => {
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bodegas', id), { name, owner });
+    await updateDoc(doc(db, 'bodegas', id), { name, owner });
     closeModal();
   };
 
@@ -625,35 +625,35 @@ export default function App() {
     } else {
       updatedLimits[materialId] = parseInt(newLimit, 10);
     }
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bodegas', bodegaId), { limits: updatedLimits });
+    await updateDoc(doc(db, 'bodegas', bodegaId), { limits: updatedLimits });
   };
 
   const handleDeleteBodega = async (bodegaId) => {
     if(window.confirm("¿Seguro que deseas eliminar esta bodega auxiliar? Los repuestos que tenga asignados ya no se mostrarán en esta vista.")) {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bodegas', bodegaId));
+      await deleteDoc(doc(db, 'bodegas', bodegaId));
     }
   };
 
   const handleCreateCostCenter = async (costCenterData) => {
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'costCenters'), {
+    await addDoc(collection(db, 'costCenters'), {
       ...costCenterData,
       createdAt: new Date().toISOString()
     });
   };
 
   const handleUpdateCostCenter = async ({ id, name }) => {
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'costCenters', id), { name });
+    await updateDoc(doc(db, 'costCenters', id), { name });
     closeModal();
   };
 
   const handleDeleteCostCenter = async (costCenterId) => {
     if(window.confirm("¿Seguro que deseas eliminar este Centro de Costos?")) {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'costCenters', costCenterId));
+      await deleteDoc(doc(db, 'costCenters', costCenterId));
     }
   };
 
   const handleCreateSupplier = async (supplierData) => {
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'suppliers'), {
+    await addDoc(collection(db, 'suppliers'), {
       ...supplierData,
       createdAt: new Date().toISOString()
     });
@@ -661,20 +661,20 @@ export default function App() {
 
   const handleDeleteSupplier = async (supplierId) => {
     if(window.confirm("¿Seguro que deseas eliminar este Proveedor de la lista oficial?")) {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'suppliers', supplierId));
+      await deleteDoc(doc(db, 'suppliers', supplierId));
     }
   };
 
   const handleUpdateUserStatus = async (userId, newStatus) => {
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), { status: newStatus });
+    await updateDoc(doc(db, 'users', userId), { status: newStatus });
   };
   
   const handleUpdateUserRole = async (userId, newRole) => {
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), { role: newRole });
+    await updateDoc(doc(db, 'users', userId), { role: newRole });
   };
 
   const handleDeleteUser = async (userId) => {
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId));
+    await deleteDoc(doc(db, 'users', userId));
     closeModal();
   };
 
@@ -3372,7 +3372,7 @@ function AuthScreen({ onAdminDirectLogin, auth }) {
       else {
         if (!name.trim()) throw new Error("Debes ingresar tu nombre real.");
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', cred.user.uid), { email, name, status: 'pending', role: 'basic', createdAt: new Date().toISOString() });
+        await setDoc(doc(db, 'users', cred.user.uid), { email, name, status: 'pending', role: 'basic', createdAt: new Date().toISOString() });
       }
     } catch (err) { 
       setError(err.code === 'auth/invalid-credential' ? "Correo o contraseña incorrectos." : err.code === 'auth/email-already-in-use' ? "Este correo ya está registrado." : err.message); 
