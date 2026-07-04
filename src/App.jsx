@@ -15,7 +15,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
@@ -33,7 +33,7 @@ const isPreviewEnv = typeof window !== 'undefined' && typeof window.__firebase_c
 const firebaseConfig = isPreviewEnv ? JSON.parse(window.__firebase_config) : localFirebaseConfig;
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, { localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}) });
 const storage = getStorage(app); 
 const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-britt"; 
 
