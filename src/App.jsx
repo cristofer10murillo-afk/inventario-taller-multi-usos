@@ -33,10 +33,7 @@ const isPreviewEnv = typeof window !== 'undefined' && typeof window.__firebase_c
 const firebaseConfig = isPreviewEnv ? JSON.parse(window.__firebase_config) : localFirebaseConfig;
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = initializeFirestore(app, { 
-  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
-  experimentalForceLongPolling: true
-});
+const db = getFirestore(app);
 const storage = getStorage(app); 
 const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-britt"; 
 
