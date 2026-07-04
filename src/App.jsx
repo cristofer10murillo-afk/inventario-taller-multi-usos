@@ -459,15 +459,29 @@ export default function App() {
   const uploadImage = async (file) => {
     if (!file) return null;
     const fileRef = ref(storage, `repuestos/${Date.now()}_${file.name}`);
-    await uploadBytes(fileRef, file);
-    return await getDownloadURL(fileRef);
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000));
+    try {
+      await Promise.race([uploadBytes(fileRef, file), timeout]);
+      return await getDownloadURL(fileRef);
+    } catch (error) {
+      console.warn("Fallo subiendo imagen (timeout o red). Se guardará sin imagen.", error);
+      alert("La imagen no pudo subir por un bloqueo en la red. El repuesto se guardará sin foto.");
+      return null;
+    }
   };
 
   const uploadDocument = async (file) => {
     if (!file) return null;
     const fileRef = ref(storage, `solicitudes/${Date.now()}_${file.name}`);
-    await uploadBytes(fileRef, file);
-    return await getDownloadURL(fileRef);
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000));
+    try {
+      await Promise.race([uploadBytes(fileRef, file), timeout]);
+      return await getDownloadURL(fileRef);
+    } catch (error) {
+      console.warn("Fallo subiendo documento (timeout o red). Se guardará sin documento.", error);
+      alert("El documento no pudo subir por un bloqueo en la red. La solicitud se guardará sin documento.");
+      return null;
+    }
   };
 
   const handleAddMaterial = async (data) => {
