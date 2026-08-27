@@ -673,14 +673,30 @@ export default function App() {
   };
 
   const handleUpdateUserStatus = async (userId, newStatus) => {
+    const targetUser = allUsers.find(u => u.id === userId);
+    if (targetUser?.email === 'cristofer10murillo@gmail.com') {
+      alert("¡Acceso denegado! No se puede cambiar el estado del Administrador Principal.");
+      return;
+    }
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), { status: newStatus });
   };
   
   const handleUpdateUserRole = async (userId, newRole) => {
+    const targetUser = allUsers.find(u => u.id === userId);
+    if (targetUser?.email === 'cristofer10murillo@gmail.com') {
+      alert("¡Acceso denegado! No se pueden modificar los permisos del Administrador Principal.");
+      return;
+    }
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId), { role: newRole });
   };
 
   const handleDeleteUser = async (userId) => {
+    const targetUser = allUsers.find(u => u.id === userId);
+    if (targetUser?.email === 'cristofer10murillo@gmail.com') {
+      alert("¡Acceso denegado! No se puede eliminar al Administrador Principal.");
+      closeModal();
+      return;
+    }
     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', userId));
     closeModal();
   };
@@ -3201,6 +3217,7 @@ function SettingsDashboard({ materials, allUsers, bodegas, costCenters, supplier
                           className="bg-[#0f1423] border border-white/10 text-white text-xs rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500 font-medium"
                           disabled={user.status !== 'approved'}
                         >
+                          <option value="master">Admin Principal (Co-Master)</option>
                           <option value="admin">Admin Secundario</option>
                           <option value="basic">Básico</option>
                           <option value="visitante">Visitante</option>
