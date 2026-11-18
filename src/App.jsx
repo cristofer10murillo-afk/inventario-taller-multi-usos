@@ -3,7 +3,7 @@ import {
   Package, Plus, ArrowDownRight, ArrowUpRight, History, 
   Search, X, AlertCircle, Box, User, Download, MapPin,
   ClipboardList, Send, Settings2, Settings, Trash2,
-  LogOut, Mail, KeyRound, UserPlus, ShieldCheck, Clock, CheckCircle2,
+  LogOut, Mail, KeyRound, UserPlus, ShieldCheck, Clock, CheckCircle2, RefreshCw,
   ImagePlus, Camera, FilePlus, CalendarDays, BarChart3, TrendingUp, AlertTriangle,
   Paperclip, FileText, ExternalLink, Building2, Cpu, Shield, DollarSign, Tag,
   ShoppingCart, Truck, Database, Undo2, Edit, Wallet, ScrollText
@@ -15,7 +15,7 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
@@ -150,12 +150,13 @@ export default function App() {
            return;
         }
         profileLoaded = true;
-        const adminName = isMasterAdmin ? 'Cristofer Lizano' : (authUser.email || 'Anónimo');
+        const adminName = isMasterAdmin ? 'Cristofer Lizano' : (authUser.displayName || (authUser.email ? authUser.email.split('@')[0] : 'Usuario'));
         const initialStatus = (isMasterAdmin || isPreviewEnv) ? 'approved' : 'pending';
         const initialRole = (isMasterAdmin || isPreviewEnv) ? 'master' : 'basic';
         
-        setUserData({ id: authUser.uid, status: initialStatus, name: adminName, role: initialRole });
-        setDoc(userDocRef, { email: authUser.email || '', name: adminName, status: initialStatus, role: initialRole, createdAt: new Date().toISOString() });
+        const newProfile = { email: authUser.email || '', name: adminName, status: initialStatus, role: initialRole, createdAt: new Date().toISOString() };
+        setUserData({ id: authUser.uid, ...newProfile });
+        setDoc(userDocRef, newProfile).catch(err => console.error("Error al crear perfil en Firestore:", err));
       }
       setAuthLoading(false);
       setLoadingError(null); 
@@ -209,15 +210,26 @@ export default function App() {
     return () => { unsubMaterials(); unsubTransactions(); unsubRequests(); unsubBodegas(); unsubCostCenters(); unsubSuppliers(); };
   }, [authUser, userData, masterOverride]);
 
+  const fetchAllUsers = async () => {
+    try {
+      const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+      const snap = await getDocs(usersRef);
+      setAllUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    }
+  };
+
   useEffect(() => {
     const isMaster = authUser?.email === 'cristofer10murillo@gmail.com' || userData?.role === 'master' || masterOverride;
     if (!authUser || !isMaster) return;
+    fetchAllUsers();
     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
     const unsub = onSnapshot(usersRef, snap => {
-      setAllUsers(snap.docs.map(doc => ({id: doc.id, ...doc.data()})));
+      setAllUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (error) => console.error("Error Users:", error));
     return () => unsub();
-  }, [authUser, userData?.role, masterOverride]);
+  }, [authUser, userData?.role, masterOverride, activeTab]);
 
   const filteredMaterials = useMemo(() => {
     return materials.filter(m => {
@@ -1181,6 +1193,7 @@ export default function App() {
                     userData={userData}
                     authUser={authUser}
                     masterOverride={masterOverride}
+                    onRefreshUsers={fetchAllUsers}
                   />
                 </div>
               )}
@@ -3052,7 +3065,7 @@ function EditCostCenterForm({ costCenter, onSubmit, onClose }) {
 }
 
 // --- AJUSTES Y PANELES DE ADMIN ---
-function SettingsDashboard({ materials, allUsers, bodegas, costCenters, suppliers, onDelete, onEdit, onUpdateUserStatus, onUpdateUserRole, onDeleteUser, onCreateBodega, onEditBodega, onDeleteBodega, onCreateCostCenter, onEditCostCenter, onDeleteCostCenter, onCreateSupplier, onDeleteSupplier, userData, authUser, masterOverride }) {
+function SettingsDashboard({ materials, allUsers, bodegas, costCenters, suppliers, onDelete, onEdit, onUpdateUserStatus, onUpdateUserRole, onDeleteUser, onCreateBodega, onEditBodega, onDeleteBodega, onCreateCostCenter, onEditCostCenter, onDeleteCostCenter, onCreateSupplier, onDeleteSupplier, userData, authUser, masterOverride, onRefreshUsers }) {
   const isMaster = userData?.role === 'master' || authUser?.email === 'cristofer10murillo@gmail.com' || masterOverride;
   const [adminSearch, setAdminSearch] = useState('');
   const [creationSearch, setCreationSearch] = useState('');
@@ -3207,7 +3220,23 @@ function SettingsDashboard({ materials, allUsers, bodegas, costCenters, supplier
         </div>
 
         <div>
-          <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2"><UserPlus className="text-indigo-400"/><span>Autorización y Roles de Personal</span></h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-bold text-white flex items-center space-x-2">
+              <UserPlus className="text-indigo-400"/>
+              <span>Autorización y Roles de Personal</span>
+            </h4>
+            {onRefreshUsers && (
+              <button 
+                type="button" 
+                onClick={onRefreshUsers} 
+                className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1.5 shadow-sm"
+                title="Volver a sincronizar lista desde la base de datos"
+              >
+                <RefreshCw size={13} />
+                <span>Actualizar Lista ({allUsers.length})</span>
+              </button>
+            )}
+          </div>
           <div className="border border-white/5 rounded-xl overflow-hidden bg-black/20">
             <table className="w-full text-left border-collapse">
               <thead>
