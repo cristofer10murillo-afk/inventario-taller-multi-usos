@@ -34,7 +34,8 @@ const firebaseConfig = isPreviewEnv ? JSON.parse(window.__firebase_config) : loc
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
+  experimentalForceLongPolling: true
 }, 'default');
 const storage = getStorage(app); 
 const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-taller-multi-usos"; 
@@ -93,6 +94,16 @@ export default function App() {
       if (!user) {
         setUserData(null); 
         setMasterOverride(false); 
+        setAuthLoading(false);
+      } else if (user.email === 'cristofer10murillo@gmail.com') {
+        setMasterOverride(true);
+        setUserData(prev => (prev && prev.role === 'master') ? prev : {
+          id: user.uid,
+          email: user.email,
+          name: 'Cristofer Lizano',
+          role: 'master',
+          status: 'approved'
+        });
         setAuthLoading(false);
       }
     });
@@ -199,13 +210,14 @@ export default function App() {
   }, [authUser, userData, masterOverride]);
 
   useEffect(() => {
-    if (!authUser || userData?.role !== 'master') return;
+    const isMaster = authUser?.email === 'cristofer10murillo@gmail.com' || userData?.role === 'master' || masterOverride;
+    if (!authUser || !isMaster) return;
     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
     const unsub = onSnapshot(usersRef, snap => {
       setAllUsers(snap.docs.map(doc => ({id: doc.id, ...doc.data()})));
     }, (error) => console.error("Error Users:", error));
     return () => unsub();
-  }, [authUser, userData?.role]);
+  }, [authUser, userData?.role, masterOverride]);
 
   const filteredMaterials = useMemo(() => {
     return materials.filter(m => {
@@ -708,7 +720,14 @@ export default function App() {
   const handleAdminDirectLogin = async (password) => {
     try {
       setAuthLoading(true);
-      await signInWithEmailAndPassword(auth, 'cristofer10murillo@gmail.com', password);
+      const cred = await signInWithEmailAndPassword(auth, 'cristofer10murillo@gmail.com', password);
+      setUserData({
+        id: cred.user.uid,
+        email: cred.user.email,
+        name: 'Cristofer Lizano',
+        role: 'master',
+        status: 'approved'
+      });
       setMasterOverride(true);
       setActiveTab('settings');
     } catch (error) {
@@ -795,7 +814,7 @@ export default function App() {
             </button>
           )}
           <div className="flex items-center justify-between px-2 pt-2 text-slate-400 border-t border-white/5 mt-2">
-            <span className="text-xs truncate">{userData?.name || 'Usuario'}</span>
+            <span className="text-xs truncate">{(userData?.name && userData.name !== 'Usuario') ? userData.name : (authUser?.email === 'cristofer10murillo@gmail.com' ? 'Cristofer Lizano' : (userData?.name || 'Usuario'))}</span>
             <button onClick={handleLogout} className="p-1 hover:text-red-400 transition-colors tooltip" title="Cerrar Sesión"><LogOut size={16} /></button>
           </div>
         </div>
@@ -817,7 +836,7 @@ export default function App() {
                activeTab === 'settings' ? 'Ajustes Principales' : 'Historial de Movimientos'}
             </h2>
             <p className="text-slate-400 mt-1 text-sm">
-              Hola, <span className="font-semibold text-indigo-400">{userData?.name || 'Usuario'}</span>. 
+              Hola, <span className="font-semibold text-indigo-400">{(userData?.name && userData.name !== 'Usuario') ? userData.name : (authUser?.email === 'cristofer10murillo@gmail.com' ? 'Cristofer Lizano' : (userData?.name || 'Usuario'))}</span>. 
               {activeTab === 'dashboard' ? ' Métricas y costos en tiempo real del inventario.' : 
                activeTab === 'inventory_taller' ? ' Gestiona los repuestos, entradas y salidas.' : 
                activeTab === 'bodegas_auxiliares' ? ' Control de stock asignado a vehículos o técnicos.' : 
@@ -1160,6 +1179,8 @@ export default function App() {
                     onCreateSupplier={handleCreateSupplier}
                     onDeleteSupplier={handleDeleteSupplier}
                     userData={userData}
+                    authUser={authUser}
+                    masterOverride={masterOverride}
                   />
                 </div>
               )}
@@ -3031,7 +3052,8 @@ function EditCostCenterForm({ costCenter, onSubmit, onClose }) {
 }
 
 // --- AJUSTES Y PANELES DE ADMIN ---
-function SettingsDashboard({ materials, allUsers, bodegas, costCenters, suppliers, onDelete, onEdit, onUpdateUserStatus, onUpdateUserRole, onDeleteUser, onCreateBodega, onEditBodega, onDeleteBodega, onCreateCostCenter, onEditCostCenter, onDeleteCostCenter, onCreateSupplier, onDeleteSupplier, userData }) {
+function SettingsDashboard({ materials, allUsers, bodegas, costCenters, suppliers, onDelete, onEdit, onUpdateUserStatus, onUpdateUserRole, onDeleteUser, onCreateBodega, onEditBodega, onDeleteBodega, onCreateCostCenter, onEditCostCenter, onDeleteCostCenter, onCreateSupplier, onDeleteSupplier, userData, authUser, masterOverride }) {
+  const isMaster = userData?.role === 'master' || authUser?.email === 'cristofer10murillo@gmail.com' || masterOverride;
   const [adminSearch, setAdminSearch] = useState('');
   const [creationSearch, setCreationSearch] = useState('');
 
@@ -3088,11 +3110,11 @@ function SettingsDashboard({ materials, allUsers, bodegas, costCenters, supplier
   return (
     <div className="space-y-10 text-slate-200">
       <div className="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
-        <div className="flex items-center space-x-3 text-white"><ShieldCheck size={20} className={userData?.role === 'master' ? "text-emerald-400" : userData?.role === 'admin' ? "text-indigo-400" : "text-slate-400"} /><span className="font-semibold">Nivel de Acceso: {userData?.role === 'master' ? 'Master Total' : userData?.role === 'admin' ? 'Administrador Secundario' : 'Básico / Limitado'}</span></div>
+        <div className="flex items-center space-x-3 text-white"><ShieldCheck size={20} className={isMaster ? "text-emerald-400" : userData?.role === 'admin' ? "text-indigo-400" : "text-slate-400"} /><span className="font-semibold">Nivel de Acceso: {isMaster ? 'Master Total' : userData?.role === 'admin' ? 'Administrador Secundario' : 'Básico / Limitado'}</span></div>
       </div>
       
       {/* SECCIÓN SOLO PARA EL MASTER */}
-      {userData?.role === 'master' && (
+      {isMaster && (
         <>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-black/20 p-6 rounded-2xl border border-white/5 lg:row-span-2">
