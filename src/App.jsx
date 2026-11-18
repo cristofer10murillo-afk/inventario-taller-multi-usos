@@ -13,9 +13,9 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, 
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail, updateProfile
 } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, getDocs } from 'firebase/firestore';
+import { initializeFirestore, collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc, setDoc, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
@@ -34,9 +34,8 @@ const firebaseConfig = isPreviewEnv ? JSON.parse(window.__firebase_config) : loc
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()}),
   experimentalForceLongPolling: true
-}, 'default');
+});
 const storage = getStorage(app); 
 const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-taller-multi-usos"; 
 
@@ -90,14 +89,15 @@ export default function App() {
     initAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setAuthUser(user);
       if (!user) {
+        setAuthUser(null);
         setUserData(null); 
         setMasterOverride(false); 
         setAuthLoading(false);
       } else if (user.email === 'cristofer10murillo@gmail.com') {
+        setAuthUser(user);
         setMasterOverride(true);
-        setUserData(prev => (prev && prev.role === 'master') ? prev : {
+        setUserData(prev => (prev && prev.id === user.uid && prev.role === 'master') ? prev : {
           id: user.uid,
           email: user.email,
           name: 'Cristofer Lizano',
@@ -105,6 +105,11 @@ export default function App() {
           status: 'approved'
         });
         setAuthLoading(false);
+      } else {
+        setAuthUser(user);
+        setMasterOverride(false);
+        setUserData(prev => (prev && prev.id === user.uid) ? prev : null);
+        setAuthLoading(true);
       }
     });
     return () => unsubscribe();
@@ -156,7 +161,7 @@ export default function App() {
         
         const newProfile = { email: authUser.email || '', name: adminName, status: initialStatus, role: initialRole, createdAt: new Date().toISOString() };
         setUserData({ id: authUser.uid, ...newProfile });
-        setDoc(userDocRef, newProfile).catch(err => console.error("Error al crear perfil en Firestore:", err));
+        setDoc(userDocRef, newProfile, { merge: true }).catch(err => console.error("Error al crear perfil en Firestore:", err));
       }
       setAuthLoading(false);
       setLoadingError(null); 
@@ -749,7 +754,9 @@ export default function App() {
     }
   };
 
-  if (authLoading) return (
+  const isMasterUser = authUser?.email === 'cristofer10murillo@gmail.com' || masterOverride || userData?.role === 'master';
+
+  if (authLoading || (authUser && !userData && !isMasterUser)) return (
     <div className="min-h-screen bg-[#0f1423] flex flex-col items-center justify-center space-y-6">
       <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-500"></div>
       <p className="text-indigo-400 font-medium tracking-wide animate-pulse">Conectando a Inventario Taller Multi Usos...</p>
@@ -769,7 +776,7 @@ export default function App() {
 
   if (!authUser) return <AuthScreen onAdminDirectLogin={handleAdminDirectLogin} auth={auth} />;
   
-  if (userData?.status === 'pending' && !masterOverride) return <PendingScreen userData={userData} onLogout={handleLogout} onMasterBypass={async (password) => { 
+  if (userData?.status !== 'approved' && !isMasterUser) return <PendingScreen userData={userData} onLogout={handleLogout} onMasterBypass={async (password) => { 
     try {
       setAuthLoading(true);
       await signInWithEmailAndPassword(auth, 'cristofer10murillo@gmail.com', password);
@@ -3447,7 +3454,8 @@ function AuthScreen({ onAdminDirectLogin, auth }) {
       else {
         if (!name.trim()) throw new Error("Debes ingresar tu nombre real.");
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', cred.user.uid), { email, name, status: 'pending', role: 'basic', createdAt: new Date().toISOString() });
+        await updateProfile(cred.user, { displayName: name.trim() });
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', cred.user.uid), { email, name: name.trim(), status: 'pending', role: 'basic', createdAt: new Date().toISOString() }, { merge: true });
       }
     } catch (err) { 
       setError(err.code === 'auth/invalid-credential' ? "Correo o contraseña incorrectos." : err.code === 'auth/email-already-in-use' ? "Este correo ya está registrado." : err.message); 
