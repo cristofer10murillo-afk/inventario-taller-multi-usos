@@ -20,13 +20,13 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // --- CONFIGURACIÓN DE FIREBASE ---
 const localFirebaseConfig = {
-  apiKey: atob('QUl6YVN5QXVCUFcweHNJVmNsRk1yMU9VUlB6QVBydlNQRDl3eXY0'),
-  authDomain: "inventario-de-repuestos-taller.firebaseapp.com",
-  projectId: "inventario-de-repuestos-taller",
-  storageBucket: "inventario-de-repuestos-taller.firebasestorage.app",
-  messagingSenderId: "974025120647",
-  appId: "1:974025120647:web:e4ac47ed91438e74bc9122",
-  measurementId: "G-8SLD789ME0"
+  apiKey: "AIzaSyABaAspjldUjO_nrqCeEFxy8Px0U-RZjFM",
+  authDomain: "inventario-taller-multi-usos.firebaseapp.com",
+  projectId: "inventario-taller-multi-usos",
+  storageBucket: "inventario-taller-multi-usos.firebasestorage.app",
+  messagingSenderId: "415085340557",
+  appId: "1:415085340557:web:23e8e0c30c200e56feffc4",
+  measurementId: ""
 };
 
 const isPreviewEnv = typeof window !== 'undefined' && typeof window.__firebase_config !== 'undefined';
@@ -37,7 +37,7 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
 }, 'default');
 const storage = getStorage(app); 
-const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-britt"; 
+const appId = isPreviewEnv && typeof window.__app_id !== 'undefined' ? window.__app_id : "inventario-taller-multi-usos"; 
 
 function getWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -721,7 +721,7 @@ export default function App() {
   if (authLoading) return (
     <div className="min-h-screen bg-[#0f1423] flex flex-col items-center justify-center space-y-6">
       <div className="animate-spin rounded-full h-14 w-14 border-b-2 border-indigo-500"></div>
-      <p className="text-indigo-400 font-medium tracking-wide animate-pulse">Conectando a International Nexus Pro...</p>
+      <p className="text-indigo-400 font-medium tracking-wide animate-pulse">Conectando a Inventario Taller Multi Usos...</p>
     </div>
   );
 
@@ -765,7 +765,7 @@ export default function App() {
         <div className="flex items-center space-x-3 mb-10">
           <div className="p-2 bg-indigo-600 rounded-lg shadow-[0_0_15px_rgba(79,70,229,0.4)] shrink-0"><Package size={24} className="text-white" /></div>
           <h1 className="text-lg font-bold tracking-tight leading-tight text-white">
-            International Nexus Pro <br/>
+            Inventario Taller Multi Usos <br/>
             <span className="text-indigo-400 text-xs font-semibold uppercase tracking-wider">by Cristofer Lizano</span>
           </h1>
         </div>
@@ -3409,7 +3409,7 @@ function AuthScreen({ onAdminDirectLogin, auth }) {
     <div className="min-h-screen bg-[#0f1423] bg-gradient-to-br from-[#0f1423] via-[#1a1c3a] to-[#0f1423] flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-[#1e253c]/60 backdrop-blur-2xl p-8 rounded-[2rem] shadow-2xl border border-white/10">
         <div className="flex justify-center mb-6"><div className="text-indigo-400"><ShieldCheck size={56} strokeWidth={1.5} /></div></div>
-        <h2 className="text-2xl font-bold text-center text-white">{isLogin ? 'International Nexus Pro' : 'International Nexus Pro - Registro'}</h2>
+        <h2 className="text-2xl font-bold text-center text-white">{isLogin ? 'Inventario Taller Multi Usos' : 'Inventario Taller Multi Usos - Registro'}</h2>
         <p className="text-center text-slate-400 text-xs tracking-widest uppercase mb-8 mt-2 font-semibold">Control Operations</p>
         
         {error && <div className="mb-6 p-3 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-sm rounded-xl flex items-center space-x-2"><AlertCircle size={18} className="shrink-0"/><span>{error}</span></div>}
